@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SportsPulse — Performance Analytics</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-900:      #060d07;
+      --bg-800:      #0a1209;
+      --bg-700:      #0f1a0d;
+      --bg-600:      #152212;
+      --bg-500:      #1c2e18;
+      --green:       #22c55e;
+      --green-dim:   #16a34a;
+      --green-light: #4ade80;
+      --amber:       #f59e0b;
+      --red:         #ef4444;
+      --blue:        #38bdf8;
+      --purple:      #a78bfa;
+      --white:       #ffffff;
+      --gray-200:    #bbf7d0;
+      --gray-400:    #86efac;
+      --gray-500:    #6b7280;
+      --border:      rgba(34, 197, 94, 0.15);
+      --radius:      8px;
+      --font:        'Inter', 'Segoe UI', system-ui, sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg-900);
+      color: var(--white);
+      font-family: var(--font);
+      font-size: 15px;
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ─────────────────────────────────────────────── */
+    header {
+      background: var(--bg-800);
+      border-bottom: 1px solid var(--border);
+      padding: 0 40px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(8px);
+    }
+
+    .header-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+      gap: 20px;
+    }
+
+    .logo { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+
+    .logo-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--green), #15803d);
+      border-radius: var(--radius);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 900; color: #fff; letter-spacing: -0.5px;
+    }
+
+    .logo-text { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+    .logo-text span { color: var(--green); }
+
+    .nav-tabs { display: flex; gap: 4px; }
+
+    .nav-tab {
+      background: none;
+      border: 1px solid transparent;
+      border-radius: var(--radius);
+      color: var(--gray-500);
+      cursor: pointer;
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 7px 16px;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .nav-tab:hover { color: var(--green-light); background: var(--bg-600); }
+    .nav-tab.active {
+      color: var(--green);
+      background: rgba(34, 197, 94, 0.1);
+      border-color: rgba(34, 197, 94, 0.25);
+    }
+
+    /* ── Main ───────────────────────────────────────────────── */
+    main {
+      flex: 1;
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 40px 40px 64px;
+    }
+
+    .view { display: none; }
+    .view.active { display: block; }
+
+    .section-header { margin-bottom: 24px; }
+    .section-header h2 { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
+    .section-sub { font-size: 13px; color: var(--gray-500); margin-top: 3px; }
+
+    /* ── Pill buttons ───────────────────────────────────────── */
+    .pill-row { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+
+    .pill-btn {
+      background: var(--bg-600);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      color: var(--gray-500);
+      cursor: pointer;
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      padding: 5px 14px;
+      transition: all 0.15s;
+    }
+    .pill-btn:hover { color: var(--green-light); border-color: rgba(34,197,94,0.3); }
+    .pill-btn.active {
+      background: rgba(34,197,94,0.12);
+      border-color: rgba(34,197,94,0.35);
+      color: var(--green);
+    }
+
+    /* ── Chart card ─────────────────────────────────────────── */
+    .chart-card {
+      background: var(--bg-700);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+    }
+
+    /* ── Comparison ─────────────────────────────────────────── */
+    .comp-controls {
+      display: flex;
+      align-items: flex-end;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .player-select-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .player-select-wrap label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+    }
+    .player-select-wrap.a label { color: var(--green); }
+    .player-select-wrap.b label { color: var(--amber); }
+
+    .player-select-wrap select,
+    .heatmap-controls select {
+      background: var(--bg-600);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--white);
+      font-family: var(--font);
+      font-size: 14px;
+      padding: 10px 36px 10px 14px;
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2322c55e' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .player-select-wrap.a select:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(34,197,94,0.12); }
+    .player-select-wrap.b select:focus { border-color: var(--amber); box-shadow: 0 0 0 3px rgba(245,158,11,0.12); }
+
+    .vs-badge {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      color: var(--gray-500);
+      padding-bottom: 12px;
+      flex-shrink: 0;
+    }
+
+    .chart-type-toggle {
+      display: flex;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      flex-shrink: 0;
+      align-self: flex-end;
+      margin-bottom: 1px;
+    }
+    .chart-type-toggle button {
+      background: var(--bg-600);
+      border: none;
+      color: var(--gray-500);
+      cursor: pointer;
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 9px 20px;
+      transition: all 0.15s;
+    }
+    .chart-type-toggle button + button { border-left: 1px solid var(--border); }
+    .chart-type-toggle button.active { background: rgba(34,197,94,0.12); color: var(--green); }
+    .chart-type-toggle button:hover:not(.active) { background: var(--bg-500); color: var(--white); }
+
+    .comp-chart-wrap { height: 340px; position: relative; }
+
+    .comp-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .cstat-card {
+      background: var(--bg-700);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      position: relative;
+      overflow: hidden;
+    }
+    .cstat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--green), transparent);
+    }
+
+    .cstat-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--gray-500);
+      margin-bottom: 10px;
+    }
+
+    .cstat-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 5px;
+    }
+    .cstat-row:last-child { margin-bottom: 0; }
+
+    .cstat-name {
+      font-size: 12px;
+      color: var(--gray-400);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 55%;
+    }
+
+    .cstat-val { font-size: 16px; font-weight: 800; line-height: 1; }
+    .cstat-val.a { color: var(--green); }
+    .cstat-val.b { color: var(--amber); }
+
+    /* ── Trends ─────────────────────────────────────────────── */
+    .trend-chart-wrap { height: 300px; }
+
+    /* ── Leaderboard ────────────────────────────────────────── */
+    .table-card {
+      background: var(--bg-700);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    table { width: 100%; border-collapse: collapse; }
+
+    thead { background: var(--bg-600); }
+
+    th {
+      padding: 12px 20px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--gray-500);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:nth-child(even) { background: rgba(0,0,0,0.15); }
+    tbody tr:hover { background: var(--bg-500); }
+
+    td { padding: 13px 20px; font-size: 14px; vertical-align: middle; }
+
+    .rank-badge {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 800;
+    }
+    .rank-1 { background: rgba(245,158,11,0.18); color: #f59e0b; border: 1px solid rgba(245,158,11,0.4); }
+    .rank-2 { background: rgba(156,163,175,0.15); color: #9ca3af; border: 1px solid rgba(156,163,175,0.3); }
+    .rank-3 { background: rgba(180,83,9,0.18);   color: #b45309; border: 1px solid rgba(180,83,9,0.35); }
+    .rank-n { background: var(--bg-600); color: var(--gray-500); border: 1px solid var(--border); }
+
+    .player-name-cell { font-weight: 600; color: var(--white); }
+    .player-name-cell small {
+      display: block;
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--gray-500);
+      margin-top: 1px;
+    }
+
+    .pos-badge {
+      display: inline-block;
+      background: rgba(34,197,94,0.1);
+      border: 1px solid rgba(34,197,94,0.2);
+      border-radius: 4px;
+      color: var(--green);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 7px;
+    }
+
+    .stat-val-large { font-size: 18px; font-weight: 800; color: var(--white); }
+
+    .progress-bar-wrap {
+      width: 140px;
+      height: 6px;
+      background: var(--bg-500);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--green-dim), var(--green));
+      border-radius: 3px;
+      transition: width 0.35s ease;
+    }
+
+    .rating-pill {
+      display: inline-block;
+      background: rgba(245,158,11,0.12);
+      border: 1px solid rgba(245,158,11,0.25);
+      border-radius: 20px;
+      color: var(--amber);
+      font-size: 13px;
+      font-weight: 700;
+      padding: 3px 10px;
+    }
+
+    /* ── Heatmap ────────────────────────────────────────────── */
+    .heatmap-controls {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .heatmap-controls label {
+      font-size: 11px; font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--gray-500);
+      flex-shrink: 0;
+    }
+    .heatmap-controls select:focus {
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px rgba(34,197,94,0.12);
+    }
+
+    .player-summary {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-left: 4px;
+    }
+    .psummary-item { font-size: 13px; color: var(--gray-500); }
+    .psummary-item strong { color: var(--green); font-weight: 700; }
+
+    .pitch-wrap {
+      background: var(--bg-700);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .pitch-wrap svg { width: 100%; height: auto; display: block; border-radius: 4px; }
+
+    .heatmap-tooltip {
+      position: fixed;
+      background: var(--bg-600);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 5px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--green-light);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.12s;
+      z-index: 200;
+      white-space: nowrap;
+    }
+
+    .heatmap-legend {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 12px;
+      font-size: 12px;
+      color: var(--gray-500);
+    }
+    .legend-bar {
+      flex: 1;
+      max-width: 200px;
+      height: 8px;
+      border-radius: 4px;
+      background: linear-gradient(90deg,
+        rgba(34,197,94,0.05) 0%,
+        rgba(34,197,94,0.3) 35%,
+        rgba(34,197,94,0.6) 65%,
+        rgba(34,197,94,0.9) 100%
+      );
+      border: 1px solid var(--border);
+    }
+
+    .pitch-label {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--gray-500);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    /* ── Footer ─────────────────────────────────────────────── */
+    footer {
+      background: var(--bg-800);
+      border-top: 1px solid var(--border);
+      padding: 20px 40px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--gray-500);
+    }
+
+    /* ── Scrollbar ──────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg-900); }
+    ::-webkit-scrollbar-thumb { background: var(--bg-500); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--green-dim); }
+
+    /* ── Responsive ─────────────────────────────────────────── */
+    @media (max-width: 900px) {
+      header, main, footer { padding-left: 20px; padding-right: 20px; }
+      .comp-controls { flex-direction: column; align-items: stretch; }
+      .vs-badge { display: none; }
+      .chart-type-toggle { align-self: flex-start; }
+      .comp-chart-wrap { height: 260px; }
+      .trend-chart-wrap { height: 240px; }
+      .comp-stats { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 600px) {
+      .nav-tab { font-size: 12px; padding: 6px 10px; }
+      .comp-stats { grid-template-columns: 1fr 1fr; gap: 8px; }
+      .progress-bar-wrap { display: none; }
+      th:nth-child(5), td:nth-child(5) { display: none; }
+      .player-summary { gap: 12px; }
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- Heatmap hover tooltip -->
+<div class="heatmap-tooltip" id="hmTooltip"></div>
+
+<!-- ── Header ─────────────────────────────────────────────── -->
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-icon">SP</div>
+      <div class="logo-text">Sports<span>Pulse</span></div>
+    </div>
+    <nav class="nav-tabs">
+      <button class="nav-tab active" data-tab="comparison" onclick="switchTab('comparison')">Player Comparison</button>
+      <button class="nav-tab" data-tab="trends"     onclick="switchTab('trends')">Season Trends</button>
+      <button class="nav-tab" data-tab="leaderboard" onclick="switchTab('leaderboard')">Leaderboard</button>
+      <button class="nav-tab" data-tab="heatmap"    onclick="switchTab('heatmap')">Match Heatmap</button>
+    </nav>
+  </div>
+</header>
+
+<!-- ── Main ───────────────────────────────────────────────── -->
+<main>
+
+  <!-- ─── Player Comparison ─────────────────────────────── -->
+  <section id="s-comparison" class="view active">
+    <div class="section-header">
+      <h2>Player Comparison</h2>
+      <p class="section-sub">Select two players to compare their season performance across six key metrics (normalized 0–100)</p>
+    </div>
+
+    <div class="comp-controls">
+      <div class="player-select-wrap a">
+        <label>Player A</label>
+        <select id="selA" onchange="playerA=+this.value; buildCompChart();"></select>
+      </div>
+      <div class="vs-badge">VS</div>
+      <div class="player-select-wrap b">
+        <label>Player B</label>
+        <select id="selB" onchange="playerB=+this.value; buildCompChart();"></select>
+      </div>
+      <div class="chart-type-toggle">
+        <button id="btnRadar" class="active" onclick="setChartMode('radar')">Radar</button>
+        <button id="btnBar"                  onclick="setChartMode('bar')">Bar</button>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="comp-chart-wrap">
+        <canvas id="compCanvas"></canvas>
+      </div>
+    </div>
+
+    <div class="comp-stats" id="compStats"></div>
+  </section>
+
+  <!-- ─── Season Trends ─────────────────────────────────── -->
+  <section id="s-trends" class="view">
+    <div class="section-header">
+      <h2>Season Trends</h2>
+      <p class="section-sub">Team performance across all 30 matchweeks — toggle metrics on or off to compare</p>
+    </div>
+
+    <div class="pill-row">
+      <button class="pill-btn active" onclick="toggleTrendDataset(0,this)">Goals Scored</button>
+      <button class="pill-btn active" onclick="toggleTrendDataset(1,this)">Goals Conceded</button>
+      <button class="pill-btn active" onclick="toggleTrendDataset(2,this)">Possession %</button>
+      <button class="pill-btn"        onclick="toggleTrendDataset(3,this)">Pass Accuracy %</button>
+      <button class="pill-btn"        onclick="toggleTrendDataset(4,this)">Team Rating</button>
+    </div>
+
+    <div class="chart-card">
+      <div class="trend-chart-wrap">
+        <canvas id="trendCanvas"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── Leaderboard ───────────────────────────────────── -->
+  <section id="s-leaderboard" class="view">
+    <div class="section-header">
+      <h2>Top Performers</h2>
+      <p class="section-sub">Season rankings — select a metric to re-sort the table</p>
+    </div>
+
+    <div class="pill-row">
+      <button class="pill-btn active" onclick="setLeaderMetric('goals',this)">Goals</button>
+      <button class="pill-btn"        onclick="setLeaderMetric('assists',this)">Assists</button>
+      <button class="pill-btn"        onclick="setLeaderMetric('rating',this)">Rating</button>
+      <button class="pill-btn"        onclick="setLeaderMetric('tackles',this)">Tackles</button>
+      <button class="pill-btn"        onclick="setLeaderMetric('minutes',this)">Minutes</button>
+    </div>
+
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Player</th>
+            <th>Pos</th>
+            <th id="leaderStatTh">Goals</th>
+            <th>Progress</th>
+            <th>Rating</th>
+          </tr>
+        </thead>
+        <tbody id="leaderBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ─── Match Heatmap ─────────────────────────────────── -->
+  <section id="s-heatmap" class="view">
+    <div class="section-header">
+      <h2>Match Heatmap</h2>
+      <p class="section-sub">Zone activity distribution across the pitch — hover over cells to see intensity</p>
+    </div>
+
+    <div class="heatmap-controls">
+      <label>Player</label>
+      <select id="selHeatmap" onchange="heatmapPlayer=+this.value; renderHeatmap(heatmapPlayer);"></select>
+      <div class="player-summary" id="playerSummary"></div>
+    </div>
+
+    <div class="pitch-wrap">
+      <svg id="pitch" viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Football pitch heatmap">
+
+        <!-- Pitch surface -->
+        <rect width="600" height="400" fill="#1b3d1b" rx="4"/>
+
+        <!-- Subtle alternating vertical stripe pattern -->
+        <rect x="0"   y="0" width="100" height="400" fill="rgba(255,255,255,0.018)"/>
+        <rect x="200" y="0" width="100" height="400" fill="rgba(255,255,255,0.018)"/>
+        <rect x="400" y="0" width="100" height="400" fill="rgba(255,255,255,0.018)"/>
+
+        <!-- Heatmap grid (rendered by JS, sits below markings) -->
+        <g id="heatGrid"></g>
+
+        <!-- Pitch markings on top -->
+        <g stroke="rgba(255,255,255,0.55)" stroke-width="1.5" fill="none" stroke-linecap="round">
+          <!-- Outer border -->
+          <rect x="5" y="5" width="590" height="390" rx="2"/>
+          <!-- Halfway line -->
+          <line x1="300" y1="5" x2="300" y2="395"/>
+          <!-- Centre circle -->
+          <circle cx="300" cy="200" r="50"/>
+          <!-- Left penalty area -->
+          <rect x="5" y="100" width="115" height="200"/>
+          <!-- Right penalty area -->
+          <rect x="480" y="100" width="115" height="200"/>
+          <!-- Left 6-yard box -->
+          <rect x="5" y="155" width="40" height="90"/>
+          <!-- Right 6-yard box -->
+          <rect x="555" y="155" width="40" height="90"/>
+          <!-- Left penalty arc (D) -->
+          <path d="M 120,163 A 50,50 0 0,1 120,237"/>
+          <!-- Right penalty arc (D) -->
+          <path d="M 480,163 A 50,50 0 0,0 480,237"/>
+          <!-- Corner arcs -->
+          <path d="M 5,22 A 17,17 0 0,1 22,5"/>
+          <path d="M 578,5 A 17,17 0 0,1 595,22"/>
+          <path d="M 595,378 A 17,17 0 0,1 578,395"/>
+          <path d="M 22,395 A 17,17 0 0,1 5,378"/>
+        </g>
+
+        <!-- Spots -->
+        <circle cx="300" cy="200" r="3"  fill="rgba(255,255,255,0.55)"/>
+        <circle cx="80"  cy="200" r="3"  fill="rgba(255,255,255,0.55)"/>
+        <circle cx="520" cy="200" r="3"  fill="rgba(255,255,255,0.55)"/>
+
+        <!-- Goals -->
+        <rect x="0"   y="175" width="5"  height="50" fill="rgba(255,255,255,0.25)" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+        <rect x="595" y="175" width="5"  height="50" fill="rgba(255,255,255,0.25)" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+      </svg>
+      <div class="pitch-label">
+        <span>← Own Half</span>
+        <span>Opponent's Half →</span>
+      </div>
+    </div>
+
+    <div class="heatmap-legend">
+      <span>Low Activity</span>
+      <div class="legend-bar"></div>
+      <span>High Activity</span>
+    </div>
+  </section>
+
+</main>
+
+<!-- ── Footer ─────────────────────────────────────────────── -->
+<footer>
+  &copy; 2026 SportsPulse Analytics &nbsp;·&nbsp; All player data is illustrative mock data for demonstration purposes
+</footer>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════════════════════════════
+
+const players = [
+  { id:1,  name:'Marcus Holden',   pos:'FW', age:26, goals:18, assists:7,  minutes:2680, passAcc:74, speed:88, tackles:12, rating:8.2 },
+  { id:2,  name:'Theo Ramirez',    pos:'MF', age:24, goals:8,  assists:16, minutes:2900, passAcc:88, speed:81, tackles:34, rating:8.0 },
+  { id:3,  name:'Lucas Webb',      pos:'FW', age:28, goals:14, assists:9,  minutes:2540, passAcc:78, speed:85, tackles:8,  rating:7.8 },
+  { id:4,  name:'Javier Santos',   pos:'MF', age:29, goals:6,  assists:12, minutes:3060, passAcc:91, speed:75, tackles:45, rating:7.9 },
+  { id:5,  name:"Kyle O'Brien",    pos:'DF', age:27, goals:2,  assists:4,  minutes:2970, passAcc:83, speed:79, tackles:78, rating:7.6 },
+  { id:6,  name:'Enzo Ferrara',    pos:'MF', age:23, goals:11, assists:14, minutes:2760, passAcc:85, speed:83, tackles:29, rating:8.1 },
+  { id:7,  name:'Alejandro Cruz',  pos:'FW', age:22, goals:9,  assists:6,  minutes:2100, passAcc:70, speed:94, tackles:5,  rating:7.4 },
+  { id:8,  name:'Yusuf Okafor',    pos:'FW', age:21, goals:7,  assists:5,  minutes:1840, passAcc:72, speed:91, tackles:6,  rating:7.2 },
+  { id:9,  name:'Callum Shaw',     pos:'DF', age:31, goals:1,  assists:2,  minutes:3060, passAcc:80, speed:71, tackles:82, rating:7.5 },
+  { id:10, name:'Dimitri Volkov',  pos:'MF', age:26, goals:5,  assists:10, minutes:2280, passAcc:87, speed:78, tackles:38, rating:7.7 },
+  { id:11, name:'Rui Fonseca',     pos:'DF', age:30, goals:3,  assists:6,  minutes:2850, passAcc:86, speed:74, tackles:67, rating:7.6 },
+  { id:12, name:'Ben Hartley',     pos:'GK', age:28, goals:0,  assists:0,  minutes:3060, passAcc:68, speed:65, tackles:0,  rating:7.8 },
+];
+
+const seasonData = {
+  labels:       Array.from({length:30}, (_,i) => `W${i+1}`),
+  goalsScored:  [2,1,3,2,0,3,2,4,1,2,3,2,1,3,4,2,3,1,2,3,4,2,1,3,2,4,3,2,3,4],
+  goalsConceded:[1,0,2,1,1,0,2,1,0,1,2,1,0,1,1,2,0,1,0,1,1,0,1,2,1,0,1,0,1,1],
+  possession:   [52,48,55,60,45,58,61,54,49,57,62,55,48,60,58,53,64,50,57,61,63,55,49,62,58,65,60,56,62,67],
+  passAccuracy: [82,78,85,88,74,86,89,83,77,85,90,84,76,87,86,81,91,79,84,88,90,83,77,89,85,92,88,84,89,93],
+  rating:       [7.2,6.8,7.6,7.8,6.5,7.5,7.9,7.4,6.9,7.6,8.1,7.5,6.8,7.8,7.7,7.3,8.2,7.1,7.5,7.9,8.0,7.4,6.9,8.0,7.6,8.3,7.9,7.5,8.0,8.4],
+};
+
+// 4 rows × 6 cols, left = own half, right = opponent's half
+const heatmapData = {
+  1:  [[5,8,12,25,45,30],[8,12,20,55,85,70],[6,10,18,60,90,75],[4,7,14,30,50,35]],   // FW striker
+  2:  [[10,25,50,40,20,8],[15,45,80,70,40,15],[12,40,75,65,35,12],[8,20,45,35,18,6]], // MF box-to-box
+  3:  [[3,5,10,30,60,45],[5,8,20,40,55,40],[8,15,25,65,85,65],[10,20,35,50,40,25]],   // FW wide right
+  4:  [[15,40,70,50,25,10],[20,55,90,65,30,12],[18,50,85,60,28,10],[12,35,60,40,20,8]],// MF deep playmaker
+  5:  [[40,60,35,15,5,2],[70,90,50,20,8,3],[65,85,45,18,6,2],[35,55,30,12,4,2]],      // DF left CB
+  6:  [[5,15,35,55,40,15],[8,25,60,80,65,30],[8,22,55,75,60,28],[5,12,30,50,35,12]],  // MF attacking mid
+  7:  [[8,15,30,60,75,55],[10,12,20,40,55,40],[5,8,15,30,40,30],[3,5,10,20,25,18]],   // FW wide left
+  8:  [[3,6,10,20,35,25],[5,10,18,40,70,55],[4,8,16,45,75,60],[3,5,10,22,40,30]],     // FW striker
+  9:  [[35,55,30,12,4,2],[60,80,45,18,6,2],[70,90,50,20,8,3],[40,60,35,15,5,2]],      // DF right CB
+  10: [[5,20,45,35,15,6],[8,30,60,55,25,10],[12,40,75,70,40,20],[15,45,80,65,35,15]], // MF right mid
+  11: [[50,65,40,20,8,3],[55,70,50,25,12,5],[40,55,35,18,8,3],[30,45,25,12,5,2]],     // DF left back
+  12: [[25,10,3,2,1,0],[80,30,8,3,2,1],[85,35,8,3,2,1],[20,8,3,2,1,0]],              // GK
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════════════════
+
+let playerA      = 1;
+let playerB      = 6;
+let chartMode    = 'radar';
+let compChart    = null;
+let trendChart   = null;
+let leaderMetric = 'goals';
+let heatmapPlayer = 1;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════════════════════
+
+const MAX = {
+  goals:   Math.max(...players.map(p => p.goals)),
+  assists: Math.max(...players.map(p => p.assists)),
+  tackles: Math.max(...players.map(p => p.tackles)),
+};
+
+function norm(p) {
+  return [
+    Math.round(p.goals   / MAX.goals   * 100),
+    Math.round(p.assists / MAX.assists * 100),
+    p.speed,
+    p.passAcc,
+    Math.round(p.tackles / MAX.tackles * 100),
+    Math.round((p.rating - 6) / 4       * 100),
+  ];
+}
+
+const AXES = ['Goals', 'Assists', 'Speed', 'Pass Acc', 'Tackles', 'Rating'];
+
+const TT = {
+  backgroundColor: '#0f1a0d',
+  borderColor:     'rgba(34,197,94,0.3)',
+  borderWidth:     1,
+  titleColor:      '#bbf7d0',
+  bodyColor:       '#86efac',
+  padding:         10,
+};
+
+function gp(id) { return players.find(p => p.id === id); }
+function kill(c) { if (c) c.destroy(); }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TAB NAVIGATION
+// ═══════════════════════════════════════════════════════════════════════════
+
+function switchTab(tab) {
+  document.querySelectorAll('.view').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('s-' + tab).classList.add('active');
+  document.querySelector(`.nav-tab[data-tab="${tab}"]`).classList.add('active');
+
+  if (tab === 'trends' && !trendChart) buildTrendChart();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// INIT SELECT DROPDOWNS
+// ═══════════════════════════════════════════════════════════════════════════
+
+function initSelects() {
+  const opts = players.map(p => `<option value="${p.id}">${p.name} (${p.pos})</option>`).join('');
+  document.getElementById('selA').innerHTML = opts;
+  document.getElementById('selB').innerHTML = opts;
+  document.getElementById('selA').value = playerA;
+  document.getElementById('selB').value = playerB;
+  document.getElementById('selHeatmap').innerHTML = opts;
+  document.getElementById('selHeatmap').value = heatmapPlayer;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PLAYER COMPARISON
+// ═══════════════════════════════════════════════════════════════════════════
+
+function setChartMode(mode) {
+  chartMode = mode;
+  document.getElementById('btnRadar').classList.toggle('active', mode === 'radar');
+  document.getElementById('btnBar').classList.toggle('active',   mode === 'bar');
+  buildCompChart();
+}
+
+function buildCompChart() {
+  kill(compChart);
+  const pA = gp(playerA);
+  const pB = gp(playerB);
+  const dA = norm(pA);
+  const dB = norm(pB);
+  const ctx = document.getElementById('compCanvas').getContext('2d');
+
+  const baseDatasets = [
+    {
+      label: pA.name,
+      data: dA,
+      borderColor:     '#22c55e',
+      backgroundColor: 'rgba(34,197,94,0.15)',
+      borderWidth: 2,
+      pointBackgroundColor: '#22c55e',
+      pointBorderColor: '#fff',
+      pointBorderWidth: 1.5,
+      pointRadius: 4,
+      pointHoverRadius: 6,
+    },
+    {
+      label: pB.name,
+      data: dB,
+      borderColor:     '#f59e0b',
+      backgroundColor: 'rgba(245,158,11,0.12)',
+      borderWidth: 2,
+      pointBackgroundColor: '#f59e0b',
+      pointBorderColor: '#fff',
+      pointBorderWidth: 1.5,
+      pointRadius: 4,
+      pointHoverRadius: 6,
+    },
+  ];
+
+  if (chartMode === 'radar') {
+    compChart = new Chart(ctx, {
+      type: 'radar',
+      data: { labels: AXES, datasets: baseDatasets.map(d => ({...d, fill:true})) },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          r: {
+            min: 0, max: 100,
+            ticks: { stepSize: 25, color: '#6b7280', backdropColor: 'transparent', font: {size:10} },
+            pointLabels: { color: '#bbf7d0', font: {size:12, weight:'600'} },
+            grid:        { color: 'rgba(34,197,94,0.1)' },
+            angleLines:  { color: 'rgba(34,197,94,0.15)' },
+          }
+        },
+        plugins: {
+          legend: { display:true, labels:{ color:'#bbf7d0', font:{size:12}, usePointStyle:true, pointStyleWidth:8, padding:16 } },
+          tooltip: { ...TT, callbacks:{ label: c => ` ${c.dataset.label}: ${c.parsed.r}` } },
+        },
+      },
+    });
+  } else {
+    compChart = new Chart(ctx, {
+      type: 'bar',
+      data: { labels: AXES, datasets: baseDatasets.map(d => ({...d, fill:false, borderRadius:4, borderSkipped:false})) },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            min: 0, max: 100,
+            grid:   { color: 'rgba(34,197,94,0.08)' },
+            ticks:  { color: '#6b7280', font:{size:11} },
+            border: { display: false },
+          },
+          y: {
+            grid:   { display: false },
+            ticks:  { color: '#bbf7d0', font:{size:12, weight:'600'} },
+            border: { display: false },
+          },
+        },
+        plugins: {
+          legend: { display:true, labels:{ color:'#bbf7d0', font:{size:12}, usePointStyle:true, pointStyleWidth:8, padding:16 } },
+          tooltip: { ...TT, callbacks:{ label: c => ` ${c.dataset.label}: ${c.parsed.x} / 100` } },
+        },
+      },
+    });
+  }
+
+  renderCompStats(pA, pB);
+}
+
+function renderCompStats(pA, pB) {
+  const stats = [
+    { label:'Goals',         a: pA.goals,            b: pB.goals,            fmt: v => v },
+    { label:'Assists',       a: pA.assists,           b: pB.assists,           fmt: v => v },
+    { label:'Speed',         a: pA.speed,             b: pB.speed,             fmt: v => v },
+    { label:'Pass Accuracy', a: pA.passAcc,           b: pB.passAcc,           fmt: v => v + '%' },
+    { label:'Minutes',       a: pA.minutes,           b: pB.minutes,           fmt: v => v.toLocaleString() },
+    { label:'Tackles',       a: pA.tackles,           b: pB.tackles,           fmt: v => v },
+  ];
+
+  document.getElementById('compStats').innerHTML = stats.map(s => `
+    <div class="cstat-card">
+      <div class="cstat-label">${s.label}</div>
+      <div class="cstat-row">
+        <div class="cstat-name">${pA.name.split(' ')[0]}</div>
+        <div class="cstat-val a">${s.fmt(s.a)}</div>
+      </div>
+      <div class="cstat-row">
+        <div class="cstat-name">${pB.name.split(' ')[0]}</div>
+        <div class="cstat-val b">${s.fmt(s.b)}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SEASON TRENDS
+// ═══════════════════════════════════════════════════════════════════════════
+
+const TREND_DATASETS = [
+  { label:'Goals Scored',    data: seasonData.goalsScored,   color:'#22c55e', hidden:false },
+  { label:'Goals Conceded',  data: seasonData.goalsConceded, color:'#ef4444', hidden:false },
+  { label:'Possession %',    data: seasonData.possession,    color:'#38bdf8', hidden:false },
+  { label:'Pass Accuracy %', data: seasonData.passAccuracy,  color:'#f59e0b', hidden:true  },
+  { label:'Team Rating',     data: seasonData.rating,        color:'#a78bfa', hidden:true  },
+];
+
+function buildTrendChart() {
+  kill(trendChart);
+  const ctx = document.getElementById('trendCanvas').getContext('2d');
+
+  trendChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: seasonData.labels,
+      datasets: TREND_DATASETS.map(d => ({
+        label: d.label,
+        data:  d.data,
+        borderColor:     d.color,
+        backgroundColor: d.color + '18',
+        borderWidth: 2,
+        pointRadius: 2.5,
+        pointHoverRadius: 6,
+        pointBackgroundColor: d.color,
+        tension: 0.35,
+        fill: false,
+        hidden: d.hidden,
+      })),
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode:'index', intersect:false },
+      scales: {
+        x: {
+          grid:  { color:'rgba(34,197,94,0.06)' },
+          ticks: { color:'#6b7280', font:{size:10}, maxTicksLimit:15 },
+          border:{ display:false },
+        },
+        y: {
+          grid:  { color:'rgba(34,197,94,0.08)' },
+          ticks: { color:'#6b7280', font:{size:11} },
+          border:{ display:false },
+        },
+      },
+      plugins: {
+        legend: { display:false },
+        tooltip: { ...TT, mode:'index', intersect:false },
+      },
+    },
+  });
+}
+
+function toggleTrendDataset(i, btn) {
+  if (!trendChart) return;
+  const ds = trendChart.data.datasets[i];
+  ds.hidden = !ds.hidden;
+  btn.classList.toggle('active', !ds.hidden);
+  trendChart.update();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// LEADERBOARD
+// ═══════════════════════════════════════════════════════════════════════════
+
+const LEADER_LABELS = { goals:'Goals', assists:'Assists', rating:'Rating', tackles:'Tackles', minutes:'Minutes' };
+
+function setLeaderMetric(metric, btn) {
+  leaderMetric = metric;
+  document.querySelectorAll('.pill-row .pill-btn').forEach(b => {
+    if (b.closest('#s-leaderboard')) b.classList.remove('active');
+  });
+  btn.classList.add('active');
+  document.getElementById('leaderStatTh').textContent = LEADER_LABELS[metric];
+  renderLeaderboard();
+}
+
+function renderLeaderboard() {
+  const sorted = [...players].sort((a,b) => b[leaderMetric] - a[leaderMetric]);
+  const maxVal = sorted[0][leaderMetric];
+  const fmtVal = v => leaderMetric === 'rating' ? v.toFixed(1) : v.toLocaleString();
+  const rankCls = i => (['rank-1','rank-2','rank-3'][i] ?? 'rank-n');
+
+  document.getElementById('leaderBody').innerHTML = sorted.map((p,i) => `
+    <tr>
+      <td><div class="rank-badge ${rankCls(i)}">${i+1}</div></td>
+      <td class="player-name-cell">${p.name}<small>${p.pos} &nbsp;·&nbsp; Age ${p.age}</small></td>
+      <td><span class="pos-badge">${p.pos}</span></td>
+      <td><span class="stat-val-large">${fmtVal(p[leaderMetric])}</span></td>
+      <td>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar-fill" style="width:${maxVal>0 ? Math.round(p[leaderMetric]/maxVal*100) : 0}%"></div>
+        </div>
+      </td>
+      <td><span class="rating-pill">${p.rating.toFixed(1)}</span></td>
+    </tr>
+  `).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MATCH HEATMAP
+// ═══════════════════════════════════════════════════════════════════════════
+
+const hmTooltip = document.getElementById('hmTooltip');
+const COLS = 6, ROWS = 4, CW = 100, CH = 100;
+
+function renderHeatmap(id) {
+  const p    = gp(id);
+  const grid = heatmapData[id];
+  const group = document.getElementById('heatGrid');
+  group.innerHTML = '';
+
+  for (let row = 0; row < ROWS; row++) {
+    for (let col = 0; col < COLS; col++) {
+      const val     = grid[row][col];
+      const opacity = (0.04 + (val / 100) * 0.82).toFixed(3);
+      const rect    = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      rect.setAttribute('x',      col * CW);
+      rect.setAttribute('y',      row * CH);
+      rect.setAttribute('width',  CW);
+      rect.setAttribute('height', CH);
+      rect.setAttribute('fill',   `rgba(34,197,94,${opacity})`);
+      rect.setAttribute('rx',     '2');
+      rect.style.cursor = 'crosshair';
+
+      rect.addEventListener('mouseenter', () => {
+        hmTooltip.textContent = `Zone activity: ${val}%`;
+        hmTooltip.style.opacity = '1';
+      });
+      rect.addEventListener('mousemove', e => {
+        hmTooltip.style.left = (e.clientX + 14) + 'px';
+        hmTooltip.style.top  = (e.clientY - 36) + 'px';
+      });
+      rect.addEventListener('mouseleave', () => {
+        hmTooltip.style.opacity = '0';
+      });
+
+      group.appendChild(rect);
+    }
+  }
+
+  // Player summary line
+  const posStat = {
+    GK: `<strong>${p.rating.toFixed(1)}</strong> avg rating`,
+    FW: `<strong>${p.goals}</strong> goals &nbsp;·&nbsp; <strong>${p.assists}</strong> assists`,
+    MF: `<strong>${p.assists}</strong> assists &nbsp;·&nbsp; <strong>${p.passAcc}%</strong> pass accuracy`,
+    DF: `<strong>${p.tackles}</strong> tackles &nbsp;·&nbsp; <strong>${p.passAcc}%</strong> pass accuracy`,
+  }[p.pos] ?? '';
+
+  document.getElementById('playerSummary').innerHTML = `
+    <div class="psummary-item"><strong>${p.pos}</strong> &nbsp;·&nbsp; Age ${p.age}</div>
+    <div class="psummary-item"><strong>${p.minutes.toLocaleString()}</strong> minutes played</div>
+    <div class="psummary-item">${posStat}</div>
+    <div class="psummary-item">Rating &nbsp;<strong>${p.rating.toFixed(1)}</strong></div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════════════════
+
+initSelects();
+buildCompChart();
+renderLeaderboard();
+renderHeatmap(heatmapPlayer);
+// trendChart built lazily on first switch to that tab
+</script>
+</body>
+</html>
